@@ -3,13 +3,15 @@
 extern crate winapi;
 
 use std::{self, io, mem};
-
+use std::net::SocketAddr;
 use std::ffi::CString;
 
-use winsock2::winapi::shared::ws2def::{AF_INET, SOCKADDR_IN, SOCK_STREAM};
-use winsock2::winapi::um::winsock2::{closesocket, gethostbyname, hostent, htons, recv, socket,
-                                     WSACleanup, WSAGetLastError, WSAStartup, INVALID_SOCKET,
-                                     SOCKET, WSADATA, WSAESHUTDOWN};
+use winsock2::winapi::shared::ws2def::{AF_INET, SOCK_STREAM};
+use winsock2::winapi::um::winsock2::{closesocket, connect, gethostbyname, hostent, htons, recv,
+                                     socket, WSACleanup, WSAGetLastError, WSAStartup,
+                                     INVALID_SOCKET, SOCKET, WSADATA, WSAESHUTDOWN};
+use std::sys;
+use std::sys::c;
 
 pub type Error = io::Error;
 
@@ -22,16 +24,11 @@ impl Response {
     pub fn open(client: ::Client) -> Result<Response, Error> {
         let mut wsaData: WSADATA = unsafe { mem::zeroed() };
         wsa_startup(wsaData).unwrap();
-        let zero = [0, 0, 0, 0, 0, 0, 0, 0];
         let hostName = get_host_by_name(client.host).unwrap();
-        let server: SOCKADDR_IN = SOCKADDR_IN {
-            sin_family: AF_INET as u16,
-            sin_port: ws2_htons(client.port).unwrap(),
-            sin_addr: std::ptr::read_volatile(hostName.h_addr_list),
-            sin_zero: zero,
-        };
-        let mut socket: SOCKET = unsafe { mem::zeroed() };
-        Ok(())
+        let addr = SocketAddr::new(client.host, client.port);
+        let socket: SOCKET = ws2_socket().unwrap();
+
+        Ok(Response { socket: socket })
     }
 }
 
@@ -45,6 +42,14 @@ impl Drop for Response {
 impl io::Read for Response {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         ws2_recv(self.socket, &mut buf)
+    }
+}
+
+impl IntoInner<SOCKET> for SocketAddr {
+    fn into_inner(self) -> SOCKET {
+        let ret = self.0;
+        mem::forget(self);
+        ret
     }
 }
 
@@ -107,6 +112,16 @@ fn ws2_socket() -> io::Result<SOCKET> {
     }
 }
 
+fn ws2_connect(socket: SOCKET, addr: &SocketAddr) -> io::Result<()> {
+    unsafe {
+        let (addrp, len) = addr2raw(addr);
+        match connect(socket, addrp, len) {
+            0 => Ok(()),
+            _ => Err(last_error()),
+        }
+    }
+}
+
 fn ws2_recv(socket: SOCKET, buf: &mut [u8]) -> io::Result<usize> {
     unsafe {
         let buf_ = buf.as_ptr() as *mut _;
@@ -115,5 +130,18 @@ fn ws2_recv(socket: SOCKET, buf: &mut [u8]) -> io::Result<usize> {
             -1 => Err(last_error()),
             n => Ok(n as usize),
         }
+    }
+}
+
+fn addr2raw(addr: &SocketAddr) -> (*const c::sockaddr, c::socklen_t) {
+    match *addr {
+        SocketAddr::V4(ref a) => (
+            a as *const _ as *const _,
+            mem::size_of_val(a) as c::socklen_t,
+        ),
+        SocketAddr::V6(ref a) => (
+            a as *const _ as *const _,
+            mem::size_of_val(a) as c::socklen_t,
+        ),
     }
 }
