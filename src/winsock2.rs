@@ -10,46 +10,38 @@ use winsock2::winapi::shared::ws2def::{AF_INET, SOCK_STREAM};
 use winsock2::winapi::um::winsock2::{closesocket, connect, gethostbyname, hostent, htons, recv,
                                      socket, WSACleanup, WSAGetLastError, WSAStartup,
                                      INVALID_SOCKET, SOCKET, WSADATA, WSAESHUTDOWN};
-use std::sys;
-use std::sys::c;
+use sys;
+use sys::c;
 
 pub type Error = io::Error;
 
 #[derive(Debug)]
-pub struct Response {
+pub struct Socket {
     socket: SOCKET,
 }
 
-impl Response {
-    pub fn open(client: ::Client) -> Result<Response, Error> {
+impl Socket {
+    pub fn open(client: ::Client) -> Result<Socket, Error> {
         let mut wsaData: WSADATA = unsafe { mem::zeroed() };
         wsa_startup(wsaData).unwrap();
         let hostName = get_host_by_name(client.host).unwrap();
         let addr = SocketAddr::new(client.host, client.port);
         let socket: SOCKET = ws2_socket().unwrap();
 
-        Ok(Response { socket: socket })
+        Ok(Socket { socket: socket })
     }
 }
 
-impl Drop for Response {
+impl Drop for Socket {
     fn drop(&mut self) {
         close_socket(self.socket).unwrap();
         wsa_cleanup().unwrap();
     }
 }
 
-impl io::Read for Response {
+impl io::Read for Socket {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         ws2_recv(self.socket, &mut buf)
-    }
-}
-
-impl IntoInner<SOCKET> for SocketAddr {
-    fn into_inner(self) -> SOCKET {
-        let ret = self.0;
-        mem::forget(self);
-        ret
     }
 }
 

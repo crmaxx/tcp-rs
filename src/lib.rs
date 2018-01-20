@@ -3,7 +3,7 @@
 use std::convert::AsRef;
 
 mod winsock2;
-pub use winsock2::{Error, Response};
+pub use winsock2::{Error, Socket};
 
 #[derive(Clone, Debug)]
 pub struct Client<'a> {
@@ -19,7 +19,7 @@ impl<'a> Client<'a> {
         }
     }
 
-    pub fn open(self) -> Result<Response, Error> {
-        Response::open(self)
+    pub fn open(self) -> Result<Socket, Error> {
+        Socket::open(self)
     }
 }
