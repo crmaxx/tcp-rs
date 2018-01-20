@@ -7,7 +7,7 @@ use std::{io, mem, ptr};
 use winsock2::winapi::shared::ntdef::NULL;
 use winsock2::winapi::shared::ws2def::{SOCKADDR_IN, AF_INET, SOCK_STREAM};
 use winsock2::winapi::um::winsock2::{gethostbyname, hostent, htons, WSAGetLastError, WSAESHUTDOWN, INVALID_SOCKET, 
-                           socket, closesocket, recv, WSAStartup, WSACleanup, SOCKET};
+                           socket, closesocket, recv, WSAStartup, WSACleanup, SOCKET, WSADATA};
 
 pub type Error = io::Error;
 
