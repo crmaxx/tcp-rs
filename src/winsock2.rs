@@ -3,7 +3,7 @@
 
 extern crate winapi;
 
-use std::{self, io, mem};
+use std::{self, io, mem, ptr};
 use std::net::SocketAddr;
 use std::ffi::CString;
 
