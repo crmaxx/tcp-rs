@@ -6,12 +6,12 @@ mod winsock2;
 pub use winsock2::{Error, Response};
 
 #[derive(Clone, Debug)]
-pub struct Client<'a, 'b> {
+pub struct Client<'a> {
     host: &'a str,
-    port: 'b u16,
+    port: u16,
 }
 
-impl<'a, 'b> Client<'a, 'b> {
+impl<'a> Client<'a> {
     pub fn new<S: ?Sized + AsRef<str>>(host: &'a S, port: u16) -> Self {
         Client {
             host: host.as_ref(),
