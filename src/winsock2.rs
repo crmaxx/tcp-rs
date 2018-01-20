@@ -22,13 +22,13 @@ impl Response {
     pub fn open(client: ::Client) -> Result<Response, Error> {
         let mut wsaData: WSADATA = unsafe { mem::zeroed() };
         wsa_startup(wsaData).unwrap();
-
+        let zero = vec![0, 8];
         let hostName = get_host_by_name(client.host).unwrap();
         let server: SOCKADDR_IN = SOCKADDR_IN {
             sin_family: AF_INET as u16,
             sin_port: ws2_htons(client.port).unwrap(),
             sin_addr: &hostName.h_addr_list,
-            sin_zero: vec![0, 8],
+            sin_zero: zero,
         };
         let mut socket: SOCKET = unsafe { mem::zeroed() };
         Ok(())
