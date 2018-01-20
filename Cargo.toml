@@ -1,0 +1,12 @@
+[package]
+name = "tcp"
+version = "0.1.0"
+authors = ["Maxim Zhukov <crmaxx@gmail.com>"]
+homepage = "https://github.com/crmaxx/tcp-rs"
+repository = "https://github.com/crmaxx/tcp-rs"
+description = "TCP Client wrapper for ws2_32"
+readme = "README.md"
+license = "MIT"
+
+[dependencies]
+winapi = { version = "~0.3", features = ["minwindef", "ntdef", "ws2def", "winsock2"] } 
