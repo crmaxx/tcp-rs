@@ -12,7 +12,7 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(addr: &SocketAddr) -> Self {
+    pub fn new(addr: SocketAddr) -> Self {
         Client {
             addr: addr,
         }
