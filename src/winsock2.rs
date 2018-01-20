@@ -55,7 +55,7 @@ fn close_socket(socket: SOCKET) -> io::Result<()> {
     }
 }
 
-fn wsa_startup(mut wsaData: WSADATA) -> io::Result<()> {
+fn wsa_startup() -> io::Result<()> {
     unsafe {
         let mut wsaData: WSADATA = unsafe { mem::zeroed() };
         match WSAStartup(0x202, &mut wsaData) {
