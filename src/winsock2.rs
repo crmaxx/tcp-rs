@@ -27,7 +27,7 @@ impl Response {
         let server: SOCKADDR_IN = SOCKADDR_IN {
             sin_family: AF_INET as u16,
             sin_port: ws2_htons(client.port).unwrap(),
-            sin_addr: hostName.h_addr_list,
+            sin_addr: std::ptr::read_volatile(hostName.h_addr_list),
             sin_zero: zero,
         };
         let mut socket: SOCKET = unsafe { mem::zeroed() };
