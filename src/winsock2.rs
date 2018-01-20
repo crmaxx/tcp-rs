@@ -1,5 +1,6 @@
 // Copyright © 2018, Maxim Zhukov
 // Licensed under the MIT License <LICENSE.md>
+
 extern crate winapi;
 
 use std::{self, io, mem};
@@ -10,8 +11,9 @@ use winsock2::winapi::shared::ws2def::{AF_INET, SOCK_STREAM};
 use winsock2::winapi::um::winsock2::{closesocket, connect, gethostbyname, hostent, htons, recv,
                                      socket, WSACleanup, WSAGetLastError, WSAStartup,
                                      INVALID_SOCKET, SOCKET, WSADATA, WSAESHUTDOWN};
-use sys;
-use sys::c;
+
+use winsock2::winapi::shared::ws2def::SOCKADDR as sockaddr;
+use winsock2::winapi::um::ws2tcpip::socklen_t;
 
 pub type Error = io::Error;
 
@@ -24,9 +26,9 @@ impl Socket {
     pub fn open(client: ::Client) -> Result<Socket, Error> {
         let mut wsaData: WSADATA = unsafe { mem::zeroed() };
         wsa_startup(wsaData).unwrap();
-        let hostName = get_host_by_name(client.host).unwrap();
-        let addr = SocketAddr::new(client.host, client.port);
+        
         let socket: SOCKET = ws2_socket().unwrap();
+        ws2_connect(self.socket, &addr).unwrap();
 
         Ok(Socket { socket: socket })
     }
@@ -125,15 +127,15 @@ fn ws2_recv(socket: SOCKET, buf: &mut [u8]) -> io::Result<usize> {
     }
 }
 
-fn addr2raw(addr: &SocketAddr) -> (*const c::sockaddr, c::socklen_t) {
+fn addr2raw(addr: &SocketAddr) -> (*const sockaddr, socklen_t) {
     match *addr {
         SocketAddr::V4(ref a) => (
             a as *const _ as *const _,
-            mem::size_of_val(a) as c::socklen_t,
+            mem::size_of_val(a) as socklen_t,
         ),
         SocketAddr::V6(ref a) => (
             a as *const _ as *const _,
-            mem::size_of_val(a) as c::socklen_t,
+            mem::size_of_val(a) as socklen_t,
         ),
     }
 }

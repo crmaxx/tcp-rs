@@ -1,21 +1,20 @@
 // Copyright © 2018, Maxim Zhukov
 // Licensed under the MIT License <LICENSE.md>
-use std::convert::AsRef;
+
+use std::net::IpAddr;
 
 mod winsock2;
 pub use winsock2::{Error, Socket};
 
 #[derive(Clone, Debug)]
-pub struct Client<'a> {
-    host: &'a str,
-    port: u16,
+pub struct Client {
+    addr: SocketAddr,
 }
 
-impl<'a> Client<'a> {
-    pub fn new<S: ?Sized + AsRef<str>>(host: &'a S, port: u16) -> Self {
+impl Client {
+    pub fn new(addr: &SocketAddr) -> Self {
         Client {
-            host: host.as_ref(),
-            port: port,
+            addr: addr,
         }
     }
 
