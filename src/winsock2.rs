@@ -2,10 +2,9 @@
 // Licensed under the MIT License <LICENSE.md>
 extern crate winapi;
 
-use std::{io, mem, ptr};
+use std::{self, io, mem};
 
 use std::ffi::CString;
-use std::os::raw::c_char;
 
 use winsock2::winapi::shared::ws2def::{AF_INET, SOCKADDR_IN, SOCK_STREAM};
 use winsock2::winapi::um::winsock2::{closesocket, gethostbyname, hostent, htons, recv, socket,
@@ -26,13 +25,13 @@ impl Response {
 
         let hostName = get_host_by_name(client.host).unwrap();
         let server: SOCKADDR_IN = SOCKADDR_IN {
-            sin_family: AF_INET,
+            sin_family: AF_INET as u16,
             sin_port: ws2_htons(client.port).unwrap(),
-            sin_addr: hostName.h_addr_list,
-            sin_zero: 0,
+            sin_addr: &hostName.h_addr_list,
+            sin_zero: vec![],
         };
         let mut socket: SOCKET = unsafe { mem::zeroed() };
-        Ok()
+        Ok(())
     }
 }
 
@@ -85,7 +84,7 @@ fn get_host_by_name(host: &str) -> io::Result<hostent> {
     unsafe {
         match gethostbyname(host.as_ptr()) {
             ptr if ptr.is_null() => Err(last_error()),
-            ptr => Ok(ptr),
+            ptr => Ok(std::ptr::read_volatile(ptr)),
         }
     }
 }
