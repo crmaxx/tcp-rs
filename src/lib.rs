@@ -1,7 +1,7 @@
 // Copyright © 2018, Maxim Zhukov
 // Licensed under the MIT License <LICENSE.md>
 
-use std::net::IpAddr;
+use std::net::{IpAddr, SocketAddr};
 
 mod winsock2;
 pub use winsock2::{Error, Socket};
