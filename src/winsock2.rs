@@ -4,10 +4,13 @@ extern crate winapi;
 
 use std::{io, mem, ptr};
 
-use winsock2::winapi::shared::ntdef::NULL;
-use winsock2::winapi::shared::ws2def::{SOCKADDR_IN, AF_INET, SOCK_STREAM};
-use winsock2::winapi::um::winsock2::{gethostbyname, hostent, htons, WSAGetLastError, WSAESHUTDOWN, INVALID_SOCKET, 
-                           socket, closesocket, recv, WSAStartup, WSACleanup, SOCKET, WSADATA};
+use std::ffi::CString;
+use std::os::raw::c_char;
+
+use winsock2::winapi::shared::ws2def::{AF_INET, SOCKADDR_IN, SOCK_STREAM};
+use winsock2::winapi::um::winsock2::{closesocket, gethostbyname, hostent, htons, recv, socket,
+                                     WSACleanup, WSAGetLastError, WSAStartup, INVALID_SOCKET,
+                                     SOCKET, WSADATA, WSAESHUTDOWN};
 
 pub type Error = io::Error;
 
@@ -19,15 +22,17 @@ pub struct Response {
 impl Response {
     pub fn open(client: ::Client) -> Result<Response, Error> {
         let mut wsaData: WSADATA = unsafe { mem::zeroed() };
-        wsa_startup(&mut wsaData).unwrap();
-        
+        wsa_startup(wsaData).unwrap();
+
         let hostName = get_host_by_name(client.host).unwrap();
-        let server = SOCKADDR_IN {
-            sin_addr.S_un.S_addr = hostName->h_addr_list[0];
-            sin_family = AF_INET;
-            sin_port = ws2_htons(client.port).unwrap();
+        let server: SOCKADDR_IN = SOCKADDR_IN {
+            sin_family: AF_INET,
+            sin_port: ws2_htons(client.port).unwrap(),
+            sin_addr: hostName.h_addr_list,
+            sin_zero: 0,
         };
-        let mut socket: SOCKET = ptr::null();
+        let mut socket: SOCKET = unsafe { mem::zeroed() };
+        Ok()
     }
 }
 
@@ -53,7 +58,7 @@ fn close_socket(socket: SOCKET) -> io::Result<()> {
     }
 }
 
-fn wsa_startup(&mut wsaData: WSADATA) -> io::Result<()> {
+fn wsa_startup(wsaData: WSADATA) -> io::Result<()> {
     unsafe {
         match WSAStartup(0x202, &mut wsaData) {
             0 => Ok(()),
@@ -76,8 +81,9 @@ fn last_error() -> io::Error {
 }
 
 fn get_host_by_name(host: &str) -> io::Result<hostent> {
+    let host = CString::new(host).unwrap();
     unsafe {
-        match gethostbyname(host) {
+        match gethostbyname(host.as_ptr()) {
             ptr if ptr.is_null() => Err(last_error()),
             ptr => Ok(ptr),
         }
@@ -95,19 +101,20 @@ fn ws2_htons(hostshort: u16) -> io::Result<u16> {
 
 fn ws2_socket() -> io::Result<SOCKET> {
     unsafe {
-        match socket(AF_INET, SOCK_STREAM, NULL) {
+        match socket(AF_INET, SOCK_STREAM, 0) {
             INVALID_SOCKET => Err(last_error()),
-            sckt => Ok(sckt as SOCKET)
+            sckt => Ok(sckt as SOCKET),
         }
     }
 }
 
 fn ws2_recv(socket: SOCKET, buf: &mut [u8]) -> io::Result<usize> {
     unsafe {
-        match recv(socket, &mut buf, buf.len(), 0) {
+        let buf_ = buf.as_ptr() as *mut _;
+        match recv(socket, buf_, buf.len() as i32, 0) {
             -1 if WSAGetLastError() == WSAESHUTDOWN => Ok(0),
             -1 => Err(last_error()),
-            n => Ok(n as usize)
+            n => Ok(n as usize),
         }
     }
 }
