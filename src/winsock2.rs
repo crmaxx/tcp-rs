@@ -25,7 +25,7 @@ pub struct Socket {
 impl Socket {
     pub fn open(client: ::Client) -> Result<Socket, Error> {
         let mut wsaData: WSADATA = unsafe { mem::zeroed() };
-        wsa_startup(&mut wsaData).unwrap();
+        wsa_startup(wsaData).unwrap();
         
         let socket: SOCKET = ws2_socket().unwrap();
         ws2_connect(socket, &client.addr).unwrap();
