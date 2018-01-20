@@ -28,7 +28,7 @@ impl Socket {
         wsa_startup(wsaData).unwrap();
         
         let socket: SOCKET = ws2_socket().unwrap();
-        ws2_connect(self.socket, &addr).unwrap();
+        ws2_connect(socket, &client.addr).unwrap();
 
         Ok(Socket { socket: socket })
     }
