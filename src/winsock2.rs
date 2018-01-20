@@ -4,9 +4,9 @@ extern crate winapi;
 
 use std::{io, mem, ptr};
 
-use winapi::shared::ntdef::NULL;
-use winapi::shared::ws2def::{SOCKADDR_IN, AF_INET, SOCK_STREAM};
-use winapi::um::winsock2::{gethostbyname, hostent, htons, WSAGetLastError, WSAESHUTDOWN, INVALID_SOCKET, 
+use winsock2::winapi::shared::ntdef::NULL;
+use winsock2::winapi::shared::ws2def::{SOCKADDR_IN, AF_INET, SOCK_STREAM};
+use winsock2::winapi::um::winsock2::{gethostbyname, hostent, htons, WSAGetLastError, WSAESHUTDOWN, INVALID_SOCKET, 
                            socket, closesocket, recv, WSAStartup, WSACleanup, SOCKET};
 
 pub type Error = io::Error;
@@ -87,7 +87,7 @@ fn get_host_by_name(host: &str) -> io::Result<hostent> {
 fn ws2_htons(hostshort: u16) -> io::Result<u16> {
     unsafe {
         match htons(hostshort) {
-            n => Ok(n as usize),
+            n => Ok(n),
             _ => Err(last_error()),
         }
     }
