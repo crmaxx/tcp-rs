@@ -43,7 +43,7 @@ impl Drop for Socket {
 
 impl io::Read for Socket {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        ws2_recv(self.socket, &mut buf)
+        ws2_recv(self.socket, buf)
     }
 }
 
@@ -58,7 +58,7 @@ fn close_socket(socket: SOCKET) -> io::Result<()> {
 
 fn wsa_startup(wsaData: WSADATA) -> io::Result<()> {
     unsafe {
-        match WSAStartup(0x202, &mut wsaData) {
+        match WSAStartup(0x202, wsaData) {
             0 => Ok(()),
             _ => Err(last_error()),
         }
@@ -78,15 +78,15 @@ fn last_error() -> io::Error {
     io::Error::from_raw_os_error(unsafe { WSAGetLastError() })
 }
 
-fn get_host_by_name(host: &str) -> io::Result<hostent> {
-    let host = CString::new(host).unwrap();
-    unsafe {
-        match gethostbyname(host.as_ptr()) {
-            ptr if ptr.is_null() => Err(last_error()),
-            ptr => Ok(std::ptr::read_volatile(ptr)),
-        }
-    }
-}
+// fn get_host_by_name(host: &str) -> io::Result<hostent> {
+//     let host = CString::new(host).unwrap();
+//     unsafe {
+//         match gethostbyname(host.as_ptr()) {
+//             ptr if ptr.is_null() => Err(last_error()),
+//             ptr => Ok(std::ptr::read_volatile(ptr)),
+//         }
+//     }
+// }
 
 fn ws2_htons(hostshort: u16) -> io::Result<u16> {
     unsafe {
